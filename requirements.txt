@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+newspaper3k
+beautifulsoup4
+requests
+apscheduler
+reportlab
