@@ -1,15 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
+import feedparser
 from newspaper import Article
 
-SOURCES = {
-    "Ekonomim": "https://www.ekonomim.com",
-    "Dunya": "https://www.dunya.com",
-    "Karar": "https://www.karar.com"
+RSS_SOURCES = {
+    "Dunya": "https://www.dunya.com/rss",
+    "Karar": "https://www.karar.com/rss/ekonomi"
 }
 
 KEYWORDS = [
     "otomotiv",
+    "araç",
+    "otomobil",
+    "elektrikli",
     "toyota",
     "tesla",
     "byd",
@@ -17,53 +18,46 @@ KEYWORDS = [
 ]
 
 
-def extract_links(base_url):
-    """Ana sayfadan haber linklerini çeker (demo amaçlı)"""
-    links = set()
-    try:
-        response = requests.get(base_url, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            if href.startswith("/") and len(href) > 20:
-                links.add(base_url.rstrip("/") + href)
-            elif href.startswith(base_url):
-                links.add(href)
-    except Exception:
-        pass
-
-    return list(links)[:10]  # demo için ilk 10 link
-
-
 def get_news():
     results = []
-    seen = set()
+    seen_links = set()
+    idx = 0
 
-    for source, base_url in SOURCES.items():
-        links = extract_links(base_url)
+    for source, rss_url in RSS_SOURCES.items():
+        feed = feedparser.parse(rss_url)
 
-        for link in links:
-            if link in seen:
+        for entry in feed.entries:
+            link = entry.get("link")
+            if not link or link in seen_links:
                 continue
-            seen.add(link)
 
+            seen_links.add(link)
+
+            summary = entry.get("summary", "")
+            text_lower = summary.lower()
+
+            if not any(k in text_lower for k in KEYWORDS):
+                continue
+
+            content = summary  # fallback
+
+            # Full text denemesi (olursa güzel olur)
             try:
                 article = Article(link, language="tr")
                 article.download()
                 article.parse()
-
-                text_lower = article.text.lower()
-
-                if any(k in text_lower for k in KEYWORDS):
-                    results.append({
-                        "id": len(results),
-                        "source": source,
-                        "title": article.title,
-                        "content": article.text,
-                        "url": link
-                    })
+                if len(article.text) > 300:
+                    content = article.text
             except Exception:
-                continue
+                pass
+
+            results.append({
+                "id": idx,
+                "source": source,
+                "title": entry.get("title", "Başlık yok"),
+                "content": content,
+                "url": link
+            })
+            idx += 1
 
     return results
