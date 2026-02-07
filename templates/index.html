@@ -2,19 +2,36 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>News Aggregator Demo</title>
+    <title>Günün Haberleri</title>
 </head>
 <body>
 
-<h2>Günün Haberleri</h2>
+<h1>Günün Haberleri</h1>
 
-<form method="post" action="/generate-pdf">
-    {% for n in news %}
+<form method="get">
+    <label>Anahtar Kelime:</label>
+    <select name="keyword">
+        <option value="">-- Tümü --</option>
+        {% for k in keywords %}
+            <option value="{{ k }}" {% if k == selected_keyword %}selected{% endif %}>
+                {{ k }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit">Filtrele</button>
+</form>
+
+<hr>
+
+<form method="post" action="/pdf">
+    {% for item in news %}
         <div>
-            <input type="checkbox" name="selected" value="{{ n.title }}">
-            {{ n.title }}
+            <input type="checkbox" name="selected_ids" value="{{ item.id }}">
+            <strong>{{ item.title }}</strong>
+            <br>
+            <small>{{ item.source }}</small>
         </div>
-        <br>
+        <hr>
     {% endfor %}
 
     <button type="submit">PDF Oluştur</button>

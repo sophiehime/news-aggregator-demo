@@ -3,27 +3,54 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 from app.scraper import get_news
-from app.pdf_generator import create_pdf
+from app.pdf_generator import generate_pdf
 
 app = FastAPI()
-
 templates = Jinja2Templates(directory="templates")
+
+KEYWORDS = [
+    "otomotiv",
+    "araç",
+    "otomobil",
+    "elektrikli",
+    "toyota",
+    "tesla",
+    "byd",
+    "nissan"
+]
 
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
+def index(request: Request, keyword: str = None):
     news = get_news()
+
+    if keyword:
+        news = [
+            n for n in news
+            if keyword.lower() in n["content"].lower()
+        ]
+
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "news": news}
+        {
+            "request": request,
+            "news": news,
+            "keywords": KEYWORDS,
+            "selected_keyword": keyword
+        }
     )
 
 
-@app.post("/generate-pdf")
-def generate_pdf(selected: list[str] = Form(...)):
-    pdf_path = create_pdf(selected)
+@app.post("/pdf")
+def create_pdf(selected_ids: list[int] = Form(...)):
+    news = get_news()
+    selected = [n for n in news if n["id"] in selected_ids]
+
+    filename = "selected_news.pdf"
+    generate_pdf(selected, filename)
+
     return FileResponse(
-        pdf_path,
+        filename,
         media_type="application/pdf",
-        filename="selected_news.pdf"
+        filename=filename
     )
