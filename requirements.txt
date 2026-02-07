@@ -6,3 +6,4 @@ beautifulsoup4
 requests
 reportlab
 lxml_html_clean
+python-multipart
