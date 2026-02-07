@@ -1,13 +1,18 @@
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
-def generate_pdf(articles, filename="daily_news.pdf"):
-    doc = SimpleDocTemplate(filename)
+
+def create_pdf(selected_articles):
+    pdf_path = "selected_news.pdf"
+
+    doc = SimpleDocTemplate(pdf_path)
     styles = getSampleStyleSheet()
-    content = []
 
-    for a in articles:
-        content.append(Paragraph(a["title"], styles["Heading2"]))
-        content.append(Paragraph(a["text"], styles["Normal"]))
+    elements = []
 
-    doc.build(content)
+    for article in selected_articles:
+        elements.append(Paragraph(article, styles["Normal"]))
+
+    doc.build(elements)
+
+    return pdf_path

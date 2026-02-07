@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>News Aggregator Demo</title>
+</head>
+<body>
+
+<h2>Günün Haberleri</h2>
+
+<form method="post" action="/generate-pdf">
+    {% for n in news %}
+        <div>
+            <input type="checkbox" name="selected" value="{{ n.title }}">
+            {{ n.title }}
+        </div>
+        <br>
+    {% endfor %}
+
+    <button type="submit">PDF Oluştur</button>
+</form>
+
+</body>
+</html>

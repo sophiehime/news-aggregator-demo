@@ -1,8 +1,8 @@
 fastapi
 uvicorn
+jinja2
 newspaper3k
 beautifulsoup4
 requests
-apscheduler
 reportlab
 lxml_html_clean

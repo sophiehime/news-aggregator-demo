@@ -1,13 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
 from newspaper import Article
-from urllib.parse import urljoin
 
-SOURCES = {
-    "Ekonomim": "https://www.ekonomim.com",
-    "Dunya": "https://www.dunya.com",
-    "Karar": "https://www.karar.com"
-}
+SOURCES = [
+    "https://www.ekonomim.com",
+    "https://www.dunya.com",
+    "https://www.karar.com"
+]
 
 KEYWORDS = [
     "otomotiv",
@@ -17,35 +14,28 @@ KEYWORDS = [
     "nissan"
 ]
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
 
-def get_article_links(source_url, limit=20):
-    response = requests.get(source_url, headers=HEADERS)
-    soup = BeautifulSoup(response.text, "html.parser")
-    links = []
+def get_news():
+    results = []
+    idx = 0
 
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if href.startswith("/"):
-            href = urljoin(source_url, href)
-        if source_url in href:
-            links.append(href)
+    for url in SOURCES:
+        try:
+            article = Article(url, language="tr")
+            article.download()
+            article.parse()
 
-    return list(set(links))[:limit]
+            text_lower = article.text.lower()
 
-def scrape_article(url):
-    try:
-        article = Article(url, language="tr")
-        article.download()
-        article.parse()
+            if any(keyword in text_lower for keyword in KEYWORDS):
+                results.append({
+                    "id": str(idx),
+                    "title": article.title,
+                    "content": article.text
+                })
+                idx += 1
 
-        if any(k in article.text.lower() for k in KEYWORDS):
-            return {
-                "title": article.title,
-                "text": article.text,
-                "url": url
-            }
-    except:
-        return None
+        except Exception:
+            continue
+
+    return results
