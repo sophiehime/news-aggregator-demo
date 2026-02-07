@@ -1,20 +1,20 @@
 import feedparser
 from newspaper import Article
 
+
 RSS_SOURCES = {
-    "Dunya": "https://www.dunya.com/rss",
-    "Karar": "https://www.karar.com/rss/ekonomi"
+    "Reuters": "https://www.reuters.com/rssFeed/automotiveNews"
 }
 
 KEYWORDS = [
-    "otomotiv",
-    "araç",
-    "otomobil",
-    "elektrikli",
-    "toyota",
+    "automotive",
+    "car",
+    "vehicle",
+    "electric",
     "tesla",
-    "byd",
-    "nissan"
+    "toyota",
+    "nissan",
+    "byd"
 ]
 
 
@@ -26,6 +26,7 @@ def get_news():
     for source, rss_url in RSS_SOURCES.items():
         feed = feedparser.parse(rss_url)
 
+        # RSS boş gelirse hiçbir şey eklenmez
         for entry in feed.entries:
             link = entry.get("link")
             if not link or link in seen_links:
@@ -33,20 +34,23 @@ def get_news():
 
             seen_links.add(link)
 
-            summary = entry.get("summary", "")
-            text_lower = summary.lower()
+            title = entry.get("title", "").strip()
+            summary = entry.get("summary", "").strip()
 
-            if not any(k in text_lower for k in KEYWORDS):
+            combined_text = f"{title} {summary}".lower()
+
+            # Anahtar kelime filtresi
+            if not any(k in combined_text for k in KEYWORDS):
                 continue
 
-            content = summary  # fallback
+            content = summary  # minimum garanti içerik
 
-            # Full text denemesi (olursa güzel olur)
+            # Full text denemesi (olursa)
             try:
-                article = Article(link, language="tr")
+                article = Article(link, language="en")
                 article.download()
                 article.parse()
-                if len(article.text) > 300:
+                if article.text and len(article.text) > 300:
                     content = article.text
             except Exception:
                 pass
@@ -54,7 +58,7 @@ def get_news():
             results.append({
                 "id": idx,
                 "source": source,
-                "title": entry.get("title", "Başlık yok"),
+                "title": title,
                 "content": content,
                 "url": link
             })
