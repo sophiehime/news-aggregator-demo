@@ -8,27 +8,11 @@ from app.pdf_generator import generate_pdf
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-KEYWORDS = [
-    "otomotiv",
-    "araç",
-    "otomobil",
-    "elektrikli",
-    "toyota",
-    "tesla",
-    "byd",
-    "nissan"
-]
-
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request, keyword: str = None):
     news = get_news()
 
-    if keyword:
-        news = [
-            n for n in news
-            if keyword.lower() in n["content"].lower()
-        ]
 
     return templates.TemplateResponse(
         "index.html",
